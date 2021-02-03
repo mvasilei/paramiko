@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-import getpass, paramiko, time, signal
+import getpass, paramiko, time, signal, re, sys
 
 def signal_handler(sig, frame):
     print('Exiting gracefully Ctrl-C detected...')
@@ -36,7 +36,7 @@ def execute_command(command, channel):
 
 def main():
    show_interfaces_status = 'show interface status | i notco|sfp\n'
-
+   pattern = re.compile(r'(?P<mif>[EGT].{1,3}\d{1,3}\/\d{1,3}\/\d{1,3})')
    try:
       with open('hostfile', 'r') as h:
          lines = h.readlines()
@@ -44,7 +44,7 @@ def main():
       print 'Could not read file .hostfile'
 
    try:
-      with open('output.txt', 'w') as o, open('disable.txt') as d:
+      with open('output.txt', 'w') as o, open('disable.txt', 'w') as d:
 
          USER = raw_input('Username: ')
 
@@ -58,7 +58,13 @@ def main():
                connection_teardown(client)
                o.write(out)
 
-               out.
+               d.write(host +'\r\n')
+
+               for output_line in out.splitlines():
+                  interface = pattern.match(output_line)
+                  if interface:
+                   d.write("interface " + interface.group('mif').strip() +'\r\n shutdown\r\n')
+
    except IOError:
       print 'Could open output.txt file to write'
 
