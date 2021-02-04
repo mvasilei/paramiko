@@ -36,7 +36,9 @@ def execute_command(command, channel):
 
 def main():
    show_interfaces_status = 'show interface status | i notco|sfp\n'
-   pattern = re.compile(r'(?P<mif>[EGT].{1,3}\d{1,3}\/\d{1,3}\/\d{1,3})')
+   # match interfaces and put interface name in group mif description on group description
+   pattern = re.compile(r'(?P<mif>^.\D{1,3}(\d{1,4}\/){1,2}\d{1,3})(?P<description>.+(?=notconn|sfpA))')
+   # read the file with the hostnames
    try:
       with open('hostfile', 'r') as h:
          lines = h.readlines()
@@ -44,10 +46,12 @@ def main():
       print 'Could not read file .hostfile'
 
    try:
-      with open('output.txt', 'w') as o, open('disable.txt', 'w') as d:
+      with open('output.txt', 'w') as o:
 
          USER = raw_input('Username: ')
 
+         #for each hostname establish connection execute the show command and if the description is empty create add entry to the file named
+         #after the host to shutdonw the correspondin interface
          for host in lines:
             print host
             PASS = getpass.getpass(prompt='Password: ')
@@ -58,12 +62,15 @@ def main():
                connection_teardown(client)
                o.write(out)
 
-               d.write(host +'\r\n')
-
-               for output_line in out.splitlines():
-                  interface = pattern.match(output_line)
-                  if interface:
-                   d.write("interface " + interface.group('mif').strip() +'\r\n shutdown\r\n')
+               try:
+                  with open(host.strip()+'.txt', 'w') as d:
+                     for output_line in out.splitlines():
+                        interface = pattern.match(output_line)
+                        if interface:
+                           if (interface.group('description').isspace() or interface.group('description').strip() == '--'):
+                              d.write("interface " + interface.group('mif').strip() +'\r\n shutdown\r\n')
+               except IOError:
+                  print 'Could open' + host.strip() + '.txt file to write'
 
    except IOError:
       print 'Could open output.txt file to write'
