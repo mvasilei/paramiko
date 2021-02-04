@@ -50,7 +50,7 @@ def main():
 
          USER = raw_input('Username: ')
 
-         #for each hostname establish connection execute the show command and if the description is empty create add entry to the file named
+         #for each hostname establish connection execute the show command and if the description is empty add entry to the file named
          #after the host to shutdonw the correspondin interface
          for host in lines:
             print host
