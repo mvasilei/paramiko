@@ -16,7 +16,7 @@ def connection_establishment(USER, PASS, host):
          time.sleep(1)
 
       channel.recv(65535)
-  except paramiko.AuthenticationException as AuthError:
+   except paramiko.AuthenticationException as AuthError:
       print 'Authentication Error'
       return False, False
    except SSHException as sshException:
@@ -64,7 +64,7 @@ def main():
          execute_command('term len 0\n', channel)
          execute_command('configure terminal\n', channel)
 
-         error = 0
+         error = False
 
          for command in command_lines:
             out = execute_command(command + '\n', channel)
@@ -74,14 +74,15 @@ def main():
                if (warning in out):
                   print 'Error while configuring ' + host + " CMD:" + command
                   connection_teardown(client)
-                  error = 1
+                  error = True
                   continue
 
-            if not error:
-               execute_command('copy run start\n', channel)
+            if error:
                connection_teardown(client)
-            else:
                continue
+
+         execute_command('copy run start\n', channel)
+         connection_teardown(client)         
 
 
 if __name__ == '__main__':
