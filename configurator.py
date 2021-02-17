@@ -73,16 +73,17 @@ def main():
             for warning in warning_list:
                if (warning in out):
                   print 'Error while configuring ' + host + " CMD:" + command
-                  connection_teardown(client)
                   error = True
-                  continue
+                  break
 
             if error:
                connection_teardown(client)
-               continue
+               break
 
-         execute_command('copy run start\n', channel)
-         connection_teardown(client)         
+         if not error:
+            print 'you are here'
+            execute_command('copy run start\n', channel)
+            connection_teardown(client)
 
 
 if __name__ == '__main__':
